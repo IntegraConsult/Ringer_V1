@@ -26,14 +26,12 @@ import org.apache.http.params.HttpConnectionParams;
 
 import android.util.Log;
 
-public abstract class HttpHelper
-{
+public abstract class HttpHelper {
     private static final String TAG = "HttpHelper";
 
     private static HttpClient httpClient;
 
-    private static void ensureHttpClient()
-    {
+    private static void ensureHttpClient() {
         if (httpClient != null)
             return;
 
@@ -53,8 +51,7 @@ public abstract class HttpHelper
         httpClient = new DefaultHttpClient(connManager, params);
     }
 
-    private static String stringFromInputStream(InputStream is) throws IOException
-    {
+    private static String stringFromInputStream(InputStream is) throws IOException {
         char[] buf = new char[1024];
         StringBuilder out = new StringBuilder();
 
@@ -68,14 +65,12 @@ public abstract class HttpHelper
         return out.toString();
     }
 
-    public static String httpGet(String url) throws Exception
-    {
+    public static String httpGet(String url) throws Exception {
         ensureHttpClient();
 
         HttpGet request = new HttpGet(url);
         HttpResponse response = httpClient.execute(request);
-        if (response != null)
-        {
+        if (response != null) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 200)
                 return stringFromInputStream(response.getEntity().getContent());

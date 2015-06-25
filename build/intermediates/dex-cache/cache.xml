@@ -2,11 +2,11 @@
 <items version="2" >
 
     <item
-        jar="D:\android\BasicPhone1\app\libs\twilioclient-android.jar"
+        jar="/Users/admin/AndroidStudioProjects/BasicPhone1/app/libs/twilioclient-android.jar"
         jumboMode="false"
         revision="22.0.1"
         sha1="e06a5ccf4abb8800ad35324f970fd7997f6f1add">
-        <dex dex="D:\android\BasicPhone1\app\build\intermediates\pre-dexed\debug\twilioclient-android-004e34d433c5d4fae63751ce0bea2fc85bbe0540.jar" />
+        <dex dex="/Users/admin/AndroidStudioProjects/BasicPhone1/app/build/intermediates/pre-dexed/debug/twilioclient-android-4d5f78a4e3e53488e58468e7ea1bb6e2628dde1a.jar" />
     </item>
 
 </items>

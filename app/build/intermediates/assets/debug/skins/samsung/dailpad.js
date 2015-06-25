@@ -225,7 +225,7 @@ jQuery('document').ready(function (){
                var phone_number = jQuery('.number').html();
                if (phone_number !='' )
                { // make the call
-                 //switch_to_page(4);
+                 // switch_to_page(4);
                  EM_proxy('call',phone_number);
                }
              }else{ 

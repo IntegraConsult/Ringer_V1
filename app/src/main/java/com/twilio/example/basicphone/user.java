@@ -34,16 +34,16 @@ public class user {
     public userSettings settings = new userSettings();
 
 
-    public String contacts    = "" ;
-    public String prefix      = "+39";
+    public String contacts = "";
+    public String prefix = "+39";
 
     private ContentResolver phoneContacts;
-    private String TAG = "Ringer" ;
+    private String TAG = "Ringer";
 
 
-    public user (Context context) {
+    public user(Context context) {
         String localSettings = "";
-        this.mainContext = context ;
+        this.mainContext = context;
         this.phoneContacts = context.getContentResolver();
         if (this.contacts.equals("")) {
             this.contacts = updateContacts();
@@ -53,28 +53,25 @@ public class user {
         readSettings();
 
 
-
     }
+
     public void readSettings() {
-        try
-        {
+        try {
             FileInputStream fileIn = new FileInputStream("settings");
             ObjectInputStream in = new ObjectInputStream(fileIn);
             this.settings = (userSettings) in.readObject();
             in.close();
             fileIn.close();
-        }catch(IOException i)
-        {
-            Log.d (TAG,"IO error while reading settings, probably file notfound");
+        } catch (IOException i) {
+            Log.d(TAG, "IO error while reading settings, probably file notfound");
             //i.printStackTrace();
             return;
-        }catch(ClassNotFoundException c)
-        {
-            Log.d(TAG," userSettings  class not found");
+        } catch (ClassNotFoundException c) {
+            Log.d(TAG, " userSettings  class not found");
             c.printStackTrace();
             return;
         }
-        Log.d(TAG,"Deserialized usersettings...");
+        Log.d(TAG, "Deserialized usersettings...");
         Log.d(TAG, "name: " + this.settings.name);
         Log.d(TAG, "code: " + this.settings.code);
         Log.d(TAG, "phone: " + this.settings.phone);
@@ -82,7 +79,7 @@ public class user {
 
     }
 
-    public void saveSettings (String name, String code, String phone, String uuid) {
+    public void saveSettings(String name, String code, String phone, String uuid) {
         userSettings mSettings = new userSettings();
         mSettings.name = name;
         mSettings.code = code;
@@ -96,43 +93,43 @@ public class user {
             out.close();
             fos.close();
 
-        }
-        catch (FileNotFoundException ef) {
-            Log.d(TAG,"file not found");
-        }
-        catch (IOException ei) {
-            Log.d(TAG,"java io error" );
+        } catch (FileNotFoundException ef) {
+            Log.d(TAG, "file not found");
+        } catch (IOException ei) {
+            Log.d(TAG, "java io error");
             ei.printStackTrace();
         }
 
     }
 
-    public String register(){
+    public String register() {
         String uuid;
-        uuid ="something crazy";
+        uuid = "something crazy";
         this.settings.name = "some wild name";
         return uuid;
 
     }
-    public String unegister () {
+
+    public String unegister() {
         return "";
     }
-    public String updateContacts(){
+
+    public String updateContacts() {
         Cursor mCursor;
         Uri CONTENT_URI = ContactsContract.Contacts.CONTENT_URI;
         String _ID = ContactsContract.Contacts._ID;
         String DISPLAY_NAME = ContactsContract.Contacts.DISPLAY_NAME;
-        String SORT = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME+" ASC";
+        String SORT = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC";
         String HAS_PHONE_NUMBER = ContactsContract.Contacts.HAS_PHONE_NUMBER;
         String WHERE_CLAUSE = HAS_PHONE_NUMBER + " > 0";
         Uri PhoneCONTENT_URI = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String Phone_CONTACT_ID = ContactsContract.CommonDataKinds.Phone.CONTACT_ID;
         String NUMBER = ContactsContract.CommonDataKinds.Phone.NUMBER;
-        Uri EmailCONTENT_URI =  ContactsContract.CommonDataKinds.Email.CONTENT_URI;
+        Uri EmailCONTENT_URI = ContactsContract.CommonDataKinds.Email.CONTENT_URI;
         String EmailCONTACT_ID = ContactsContract.CommonDataKinds.Email.CONTACT_ID;
         String DATA = ContactsContract.CommonDataKinds.Email.DATA;
         String contactName, contactEmail, contactPhone;
-        int contactCount = 0 ;
+        int contactCount = 0;
         String contactJson = "";
         mCursor = phoneContacts.query(
 
@@ -149,10 +146,9 @@ public class user {
         if (mCursor.getCount() < 1) {
             Log.d(TAG, "SQLLite no matches");
             return "";
-        }
-        else {
+        } else {
             Log.d(TAG, "SQLLite " + mCursor.getCount() + " matches");
-            contactJson="[";
+            contactJson = "[";
             while (mCursor.moveToNext()) {
                 contactName = contactEmail = contactPhone = "";
                 // Gets the value from the column.
@@ -197,12 +193,10 @@ public class user {
                 }
 
 
-
-
             }
             // end of while loop
             //skip last ,
-            contactJson =contactJson.substring(0,contactJson.length() -1);
+            contactJson = contactJson.substring(0, contactJson.length() - 1);
             contactJson += "]";
 
         }

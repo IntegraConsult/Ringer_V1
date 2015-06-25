@@ -17,6 +17,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:id="@+id/linearLayout">
+
         <TextView
             android:layout_width="147dp"
             android:layout_height="wrap_content"
@@ -28,6 +29,7 @@
             android:background="#000000"
             android:textColor="#CCCCCC"
             android:layout_weight="0.75" />
+
         <TextView
             android:layout_width="121dp"
             android:layout_height="wrap_content"
@@ -72,7 +74,7 @@
             android:layout_below="@+id/capabilites_button"
             android:layout_marginTop="10dp"
             android:layout_alignLeft="@+id/capabilites_button"
-            android:checked="true"/>
+            android:checked="true" />
 
         <CheckBox
             android:id="@+id/outgoing"
@@ -130,10 +132,9 @@
         android:layout_above="@+id/outgoing_client"
         android:layout_alignParentLeft="true"
         android:layout_marginBottom="65dp" />
-    
-    
-    
-    <EditText 
+
+
+    <EditText
         android:id="@+id/outgoing_client"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -142,9 +143,8 @@
         android:layout_marginTop="118dp"
         android:layout_below="@+id/linearLayout"
         android:layout_alignParentLeft="true" />
-    
-    
-        
+
+
     <RadioGroup
         android:id="@+id/input_select"
         android:layout_width="wrap_content"
@@ -152,7 +152,7 @@
         android:layout_below="@+id/client_name"
         android:layout_alignLeft="@+id/client_name"
         android:orientation="horizontal"
-        android:checkedButton="@+id/input_text" >
+        android:checkedButton="@+id/input_text">
 
     </RadioGroup>
 

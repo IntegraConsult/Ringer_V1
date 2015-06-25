@@ -17,7 +17,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="Ringer">
         <activity
-            android:name=".main"
+            android:name=".mainActivity"
             android:label="Ringer"
             android:launchMode="singleTop"
             android:configChanges="orientation"

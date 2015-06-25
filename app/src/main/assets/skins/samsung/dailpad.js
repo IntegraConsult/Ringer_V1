@@ -20,6 +20,18 @@ function show_state (state) {
   //jQuery('.number').html(phoneState);
   jQuery('#phonestate-indicator').removeClass();
   jQuery('#phonestate-indicator').addClass(phoneState);
+  var pad = jQuery('#pad-call');
+  pad.removeClass();
+
+  if (phoneState == "ready") {
+    pad.addClass('digits third pad-action icon call');
+
+  }
+  else{
+    pad.addClass('digits third pad-action icon hangup');
+
+  }
+
   
   
 }
@@ -221,13 +233,21 @@ jQuery('document').ready(function (){
              total = total.slice(0,-1);
              number.empty().append(total);
              }else if(index == 14){
-               // only initiate a call if there is a phone number to call to
-               var phone_number = jQuery('.number').html();
-               if (phone_number !='' )
-               { // make the call
-                 // switch_to_page(4);
-                 EM_proxy('call',phone_number);
+               if (phoneState== 'ready'){
+                  // only initiate a call if there is a phone number to call to
+                  var phone_number = jQuery('.number').html();
+                  if (phone_number !='' )
+                  { // make the call
+                       // switch_to_page(4);
+                       EM_proxy('call',phone_number);
+                  }
+
                }
+               else {
+                 EM_proxy('hangup');
+
+               }
+
              }else{ 
                add_key(number,index+1);
              }

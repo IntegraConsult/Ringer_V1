@@ -8,6 +8,8 @@ import android.provider.ContactsContract;
 import android.util.Log;
 
 
+import org.json.JSONObject;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -30,8 +32,14 @@ class userSettings implements Serializable {
 
 public class user {
     private Context mainContext;
+    private mainActivity mainAct;
 
     public userSettings settings = new userSettings();
+
+    //public String ringerLoginUrl ="http://twilio/unapps.net/login.php";
+    //public String ringerRegisterUrl ="http://twilio/unapps.net/register.php";
+    public String ringerLoginUrl ="http://192.168.1.105/twilio/login.php";
+    public String ringerRegisterUrl ="http://192.168.1.105/twilio/register.php";
 
 
     public String contacts = "";
@@ -41,9 +49,11 @@ public class user {
     private String TAG = "Ringer";
 
 
-    public user(Context context) {
+
+    public user(Context context, mainActivity act) {
         String localSettings = "";
         this.mainContext = context;
+        this.mainAct = act;
         this.phoneContacts = context.getContentResolver();
         if (this.contacts.equals("")) {
             this.contacts = updateContacts();
@@ -54,21 +64,83 @@ public class user {
 
 
     }
+    public void loginAtRinger () {
+        Log.d(TAG,"Log into ringer");
+        //get user settings
+        readSettings();
+        Log.d(TAG, "uuid is " + this.settings.uuid);
+
+        //check length of uuid
+        if (settings.uuid.length() >15 ) {
+            Log.d(TAG,"login at Ringer UUID passed first inspection");
+            // encrypt settings
+            String encryptedSettings = encryptSettings();
+            String url = ringerLoginUrl + "?q=" + encryptedSettings;
+            // do httpget
+            try {
+                String response = HttpHelper.httpGet(url);
+                Log.d(TAG,"Ringerlogin response is: "+response);
+                //on response:
+                //get capabilities and token
+                //capabilities include callout or call in?
+
+                //yes: login to twilio with token
+                //no: zilch
+            }
+            catch (Exception e) {
+                Log.e(TAG,"error in http login get");
+            }
+        }
+        else {
+            //show page 5
+               //on save.click :
+               //save user.settings
+               // register at ringer
+            mainAct.showPage(5);
+
+        }
+
+
+    }
+
+    public void registerAtRinger() {
+        readSettings();
+        //encrypt settings
+
+        String encryptedSettings = encryptSettings();
+        //doo http request call Ringerregistration?q=encryptedjson
+        //3.on response loginAtRinger
+        String url = ringerRegisterUrl + "?q=" + encryptedSettings;
+        // do httpget
+        try {
+            String response = HttpHelper.httpGet(url);
+            Log.d(TAG,"Ringer register  response is: "+response);
+
+        }
+        catch (Exception e) {
+            Log.e(TAG,"error in http register get");
+        }
+    }
+
+    public String  encryptSettings () {
+        JSONObject json = new JSONObject();
+
+
+        //encrypt json
+        return json.toString();
+    }
+
 
     public void readSettings() {
         try {
-            FileInputStream fileIn = new FileInputStream("settings");
+            FileInputStream fileIn = this.mainContext.openFileInput("settings.ser");
             ObjectInputStream in = new ObjectInputStream(fileIn);
             this.settings = (userSettings) in.readObject();
             in.close();
             fileIn.close();
-        } catch (IOException i) {
+        } catch (Exception i) {
             Log.d(TAG, "IO error while reading settings, probably file notfound");
             //i.printStackTrace();
-            return;
-        } catch (ClassNotFoundException c) {
-            Log.d(TAG, " userSettings  class not found");
-            c.printStackTrace();
             return;
         }
         Log.d(TAG, "Deserialized usersettings...");
@@ -87,18 +159,23 @@ public class user {
         mSettings.uuid = uuid;
         try {
 
-            FileOutputStream fos = this.mainContext.openFileOutput("settings", Context.MODE_PRIVATE);
+            FileOutputStream fos = this.mainContext.openFileOutput("settings.ser", Context.MODE_PRIVATE);
             ObjectOutputStream out = new ObjectOutputStream(fos);
             out.writeObject(mSettings);
             out.close();
+            fos.write(mSettings.name.getBytes());
             fos.close();
 
-        } catch (FileNotFoundException ef) {
-            Log.d(TAG, "file not found");
         } catch (IOException ei) {
             Log.d(TAG, "java io error");
             ei.printStackTrace();
+        } catch (Exception any) {
+            Log.d(TAG, "weird write error");
+
         }
+
+        // just to check if all is OK
+        readSettings();
 
     }
 

@@ -166,7 +166,7 @@ public class provider implements DeviceListener,
         try {
             if (device == null) {
                 device = Twilio.createDevice(capabilityToken, this);
-                Intent intent = new Intent(context, main.class);
+                Intent intent = new Intent(context, mainActivity.class);
                 PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                 device.setIncomingIntent(pendingIntent);
             } else

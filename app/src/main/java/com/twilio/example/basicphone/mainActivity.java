@@ -29,7 +29,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.twilio.example.basicphone.provider.BasicConnectionListener;
 import com.twilio.example.basicphone.provider.BasicDeviceListener;
@@ -38,7 +37,7 @@ import com.twilio.example.basicphone.provider.LoginListener;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class main extends Activity implements LoginListener,
+public class mainActivity extends Activity implements LoginListener,
         BasicConnectionListener,
         BasicDeviceListener,
         View.OnClickListener,
@@ -50,6 +49,8 @@ public class main extends Activity implements LoginListener,
 
     private provider phone;
     private ringer account;
+
+
 
     private ImageButton mainButton;
     private EditText logTextBox;
@@ -80,6 +81,10 @@ public class main extends Activity implements LoginListener,
     public void userMessage(String message) {
         //Log.d(TAG,"userBar " + message);
         this.userBar.setText(message);
+    }
+
+    public void showPage(int page) {
+        mWebView.loadUrl("javascript: show_page('" + page + "')");
     }
 
 
@@ -169,7 +174,10 @@ public class main extends Activity implements LoginListener,
                         mUser.getString("name"),
                         mUser.getString("code"),
                         mUser.getString("phone"),
-                        mUser.getString("phone") + mUser.getString("name") + mUser.getString("code"));
+                        mUser.getString("phone") +
+                                mUser.getString("name") +
+                                mUser.getString("code"));
+                phoneUser.registerAtRinger();
 
             } else if (action.equals("phoneVolume")) {
                 int volume = payload.getInt("arguments");
@@ -223,11 +231,12 @@ public class main extends Activity implements LoginListener,
         statusMessage("initialising Ringer....");
 
 
-        account = new ringer(this);
         mDevice = new device(this);
-        phoneUser = new user(this);
 
-        account.register();
+
+        Log.d(TAG,"Create user");
+        phoneUser = new user(this,mainActivity.this);
+        phoneUser.loginAtRinger();
 
 
         phone = provider.getInstance(getApplicationContext());
@@ -266,6 +275,7 @@ public class main extends Activity implements LoginListener,
             addStatusMessage(R.string.got_incoming);
             syncMainButton();
         }
+        phoneUser.loginAtRinger();
     }
 
     @Override
@@ -385,7 +395,7 @@ public class main extends Activity implements LoginListener,
             @Override
             public void run() {
                 if (incomingAlert == null) {
-                    incomingAlert = new AlertDialog.Builder(main.this)
+                    incomingAlert = new AlertDialog.Builder(mainActivity.this)
                             .setTitle(R.string.incoming_call)
                             .setMessage(R.string.incoming_call_message)
                             .setPositiveButton(R.string.answer, new DialogInterface.OnClickListener() {

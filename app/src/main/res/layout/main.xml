@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_alignParentBottom="true"
+    android:layout_centerHorizontal="true"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:weightSum="1"
+    android:background="#000000">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="1"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/linearLayout">
+        <TextView
+            android:layout_width="147dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Initialising Ringer..."
+            android:id="@+id/textView"
+            android:autoText="true"
+
+            android:background="#000000"
+            android:textColor="#CCCCCC"
+            android:layout_weight="0.75" />
+        <TextView
+            android:layout_width="121dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="not logged in"
+            android:id="@+id/userText"
+            android:autoText="true"
+
+            android:background="#000000"
+            android:textColor="#CCCCCC"
+            android:gravity="right"
+            android:layout_weight="0.22" />
+
+
+    </LinearLayout>
+
+
+    <WebView
+        android:layout_width="match_parent"
+        android:layout_height="399dp"
+        android:id="@+id/webView"
+        android:layout_below="@+id/input_select" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/capabilites_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/capability"
+            android:layout_below="@+id/outgoing_client"
+            android:layout_alignLeft="@+id/log_text_box" />
+
+        <CheckBox
+            android:id="@+id/incoming"
+            android:text="@string/incoming"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/capabilites_button"
+            android:layout_marginTop="10dp"
+            android:layout_alignLeft="@+id/capabilites_button"
+            android:checked="true"/>
+
+        <CheckBox
+            android:id="@+id/outgoing"
+            android:text="@string/outgoing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/incoming"
+            android:checked="true"
+            android:layout_toLeftOf="@+id/main_button" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="1">
+
+        <EditText
+            android:id="@+id/log_text_box"
+            android:layout_width="283dp"
+            android:layout_height="75dp"
+            android:editable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:inputType="textMultiLine"
+            android:gravity="top"
+            android:layout_below="@+id/outgoing"
+            android:layout_alignLeft="@+id/outgoing"
+            android:layout_alignRight="@+id/main_button" />
+
+        <ImageButton
+            android:id="@+id/main_button"
+            android:layout_width="match_parent"
+            android:layout_height="63dp"
+            android:background="#000"
+            android:padding="0dp"
+            android:gravity="center"
+            android:src="@drawable/idle"
+            android:scaleType="centerInside"
+            android:layout_above="@+id/input_text"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="33dp" />
+
+    </LinearLayout>
+
+
+    <EditText
+        android:id="@+id/client_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/client_name"
+        android:layout_above="@+id/outgoing_client"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="65dp" />
+    
+    
+    
+    <EditText 
+        android:id="@+id/outgoing_client"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/outgoing_client"
+        android:layout_marginTop="118dp"
+        android:layout_below="@+id/linearLayout"
+        android:layout_alignParentLeft="true" />
+    
+    
+        
+    <RadioGroup
+        android:id="@+id/input_select"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/client_name"
+        android:layout_alignLeft="@+id/client_name"
+        android:orientation="horizontal"
+        android:checkedButton="@+id/input_text" >
+
+    </RadioGroup>
+
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/input_text"
+        android:text="@string/input_text"
+        android:layout_alignTop="@+id/input_number"
+        android:layout_toRightOf="@+id/input_number" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/input_number"
+        android:text="@string/input_number"
+        android:layout_below="@+id/capabilites_button"
+        android:layout_toRightOf="@+id/main_button" />
+
+
+</LinearLayout>

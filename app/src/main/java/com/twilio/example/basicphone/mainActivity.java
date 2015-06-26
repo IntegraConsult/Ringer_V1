@@ -84,7 +84,7 @@ public class mainActivity extends Activity implements LoginListener,
     }
 
     public void showPage(int page) {
-        mWebView.loadUrl("javascript: show_page('" + page + "')");
+        mWebView.loadUrl("javascript: switch_to_page('" + page + "')");
     }
 
 
@@ -110,13 +110,7 @@ public class mainActivity extends Activity implements LoginListener,
             String javaScriptUrl;
             javaScriptUrl = "javascript:";
             javaScriptUrl += "list_contacts('" + phoneUser.contacts + "');";
-            if (phoneUser.settings.uuid.equals("")) {
-                // show the settings page
-                javaScriptUrl += "switch_to_page(5);";
-            } else {
-                // show the dialpad page
-                javaScriptUrl += "switch_to_page(0);";
-            }
+
 
             //phoneLine.phoneEvent("debug","got to onpagefinished event with list =" + javaScriptUrl);
             view.loadUrl(javaScriptUrl);
@@ -233,10 +227,23 @@ public class mainActivity extends Activity implements LoginListener,
 
         mDevice = new device(this);
 
-
-        Log.d(TAG,"Create user");
+        //create a new phone user
         phoneUser = new user(this,mainActivity.this);
+
+        //load the UI
+        mWebView = (WebView) findViewById(R.id.webView);
+        // make sure that the default browser is not invoked when a link is clicked
+        mWebView.setWebViewClient(new MyWebViewClient());
+        // Enable Javascript
+        WebSettings webSettings = mWebView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        mWebView.loadUrl(skinUrl);
+
+
+        //auto login phone user intop Ringer
         phoneUser.loginAtRinger();
+        userMessage(phoneUser.settings.name);
+
 
 
         phone = provider.getInstance(getApplicationContext());
@@ -248,16 +255,7 @@ public class mainActivity extends Activity implements LoginListener,
                 incomingCheckBox.isChecked());
 
 
-        //load the UI
-        mWebView = (WebView) findViewById(R.id.webView);
-        // make sure that the default browser is not invoked when a link is clicked
-        mWebView.setWebViewClient(new MyWebViewClient());
-        // Enable Javascript
-        WebSettings webSettings = mWebView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        mWebView.loadUrl(skinUrl);
 
-        userMessage(phoneUser.settings.name);
 
     }
 

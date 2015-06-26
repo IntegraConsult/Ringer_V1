@@ -8,6 +8,7 @@ import android.provider.ContactsContract;
 import android.util.Log;
 
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileInputStream;
@@ -38,8 +39,8 @@ public class user {
 
     //public String ringerLoginUrl ="http://twilio/unapps.net/login.php";
     //public String ringerRegisterUrl ="http://twilio/unapps.net/register.php";
-    public String ringerLoginUrl ="http://192.168.1.105/twilio/login.php";
-    public String ringerRegisterUrl ="http://192.168.1.105/twilio/register.php";
+    public String ringerLoginUrl ="http://192.168.1.107/ringer/login.php";
+    public String ringerRegisterUrl ="http://192.168.1.107/ringer/register.php";
 
 
     public String contacts = "";
@@ -47,6 +48,7 @@ public class user {
 
     private ContentResolver phoneContacts;
     private String TAG = "Ringer";
+    private webConnection web ;
 
 
 
@@ -54,48 +56,69 @@ public class user {
         String localSettings = "";
         this.mainContext = context;
         this.mainAct = act;
+        web = new webConnection(this);
         this.phoneContacts = context.getContentResolver();
         if (this.contacts.equals("")) {
             this.contacts = updateContacts();
         }
+    }
 
-        //  get user the settings from file
-        readSettings();
+    public void handleWebResponse(String webResponse) {
+        JSONObject response = null;
+        String url = null;
+        String loginStatus = null;
+        Log.d(TAG,"handling web respnse");
+        try {
+            response = new JSONObject(webResponse);
+            url = response.getString("url");
+            if (url.equals("ringer/login")) {
+                loginStatus = response.getString("status");
+                if (!loginStatus.equals("OK")) {
+                    Log.d(TAG,"login status OK");
+                    // continue with phone processing
+                }
+                else {
+                    mainAct.showPage(5);
+                }
+            }
+            else if (url.equals("ringer/register")) {
+                // after registration auto-login (again)
+                loginAtRinger();
+            }
+            else {
+                Log.e(TAG,"Error i loginhandler, unknown url");
+            }
+        }
+        catch (JSONException e){
+            Log.d(TAG,"handle web response JSON error");
 
+        }
+
+
+        Log.d(TAG,"handling web respopnse" + webResponse);
 
     }
+
     public void loginAtRinger () {
         Log.d(TAG,"Log into ringer");
         //get user settings
         readSettings();
-        Log.d(TAG, "uuid is " + this.settings.uuid);
+        Log.d(TAG, " uuid is " + this.settings.uuid);
 
         //check length of uuid
         if (settings.uuid.length() >15 ) {
             Log.d(TAG,"login at Ringer UUID passed first inspection");
             // encrypt settings
             String encryptedSettings = encryptSettings();
-            String url = ringerLoginUrl + "?q=" + encryptedSettings;
-            // do httpget
-            try {
-                String response = HttpHelper.httpGet(url);
-                Log.d(TAG,"Ringerlogin response is: "+response);
-                //on response:
-                //get capabilities and token
-                //capabilities include callout or call in?
-
-                //yes: login to twilio with token
-                //no: zilch
-            }
-            catch (Exception e) {
-                Log.e(TAG,"error in http login get");
-            }
+            web.get(ringerLoginUrl, encryptedSettings);
+            // web.get will invoke handle webresponse inside the parent class;
         }
         else {
-            //show page 5
-               //on save.click :
-               //save user.settings
-               // register at ringer
+            Log.d(TAG, "UUID did not pas first inspection so show the registration page (5)");
+            //show page 5 contains:
+                 //on save.click :
+                    //save user.settings to file
+                    // register at ringer
             mainAct.showPage(5);
 
         }
@@ -110,24 +133,17 @@ public class user {
         String encryptedSettings = encryptSettings();
         //doo http request call Ringerregistration?q=encryptedjson
         //3.on response loginAtRinger
-        String url = ringerRegisterUrl + "?q=" + encryptedSettings;
-        // do httpget
-        try {
-            String response = HttpHelper.httpGet(url);
-            Log.d(TAG,"Ringer register  response is: "+response);
+        web.get(ringerRegisterUrl,encryptedSettings);
 
-        }
-        catch (Exception e) {
-            Log.e(TAG,"error in http register get");
-        }
     }
 
     public String  encryptSettings () {
-        JSONObject json = new JSONObject();
-
-
-        //encrypt json
-        return json.toString();
+        String settingsString = this.settings.name + "/" + this.settings.phone + "/" + this.settings.code;
+       String encryptedSettings;
+       Log.d(TAG,"sttingsString  is " + settingsString);
+       //encrypt json
+       encryptedSettings = settingsString;
+       return encryptedSettings;
     }
 
 
@@ -179,17 +195,6 @@ public class user {
 
     }
 
-    public String register() {
-        String uuid;
-        uuid = "something crazy";
-        this.settings.name = "some wild name";
-        return uuid;
-
-    }
-
-    public String unegister() {
-        return "";
-    }
 
     public String updateContacts() {
         Cursor mCursor;

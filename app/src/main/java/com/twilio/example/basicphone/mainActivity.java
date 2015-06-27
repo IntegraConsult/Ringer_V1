@@ -14,6 +14,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.InputType;
@@ -71,9 +72,26 @@ public class mainActivity extends Activity implements LoginListener,
     private user phoneUser;
     private device mDevice;
 
-
+    public void statusAlert(String message){
+        this.statusBar.setTextColor(Color.RED);;
+        this.statusBar.setText(message);
+    }
     public void statusMessage(String message) {
         //Log.d(TAG,"statusbar " + message);
+        if (message.equals("Ready")){
+            if (phoneUser.capabilities.phoneInCapability.equals("yes")&& phoneUser.capabilities.phoneOutCapability.equals("yes")) {
+                message = "Ready to call/receive";
+            }
+            else if (phoneUser.capabilities.phoneInCapability.equals("yes")){
+                message = "Ready to receive";
+            }
+            else if (phoneUser.capabilities.phoneOutCapability.equals("yes")) {
+                message = "Ready to call";
+            }
+            else {
+                message ="Not authorized";
+            }
+        }
         this.statusBar.setText(message);
     }
 
@@ -157,11 +175,16 @@ public class mainActivity extends Activity implements LoginListener,
                 String number = payload.getString("arguments");
                 Log.d(TAG, "call " + number);
                 if (!number.equals("")) {
-                    //sounds.playString(number);
-                    Map<String, String> params = new HashMap<String, String>();
-                    number = "client:" + number;
-                    params.put("To", number);
-                    phone.connect(params);
+                    if (phoneUser.capabilities.phoneOutCapability.equals("yes")) {
+                        //sounds.playString(number);
+                        Map<String, String> params = new HashMap<String, String>();
+                        number = "client:" + number;
+                        params.put("To", number);
+                        phone.connect(params);
+                    }
+                    else {
+                        statusAlert("not authorized to call");
+                    }
 
                 }
 
@@ -208,25 +231,33 @@ public class mainActivity extends Activity implements LoginListener,
 
     }
 
+    public void providerLogin (){
+        //phone.login(clientNameTextBox.getText().toString(),
+        //        outgoingCheckBox.isChecked(),
+        //        incomingCheckBox.isChecked());
+        if (phoneUser.capabilities.phoneInCapability.equals("yes")||phoneUser.capabilities.phoneOutCapability.equals("yes") ) {
+            phone.login("jenny",
+                    phoneUser.capabilities.phoneOutCapability.equals("yes"),
+                    phoneUser.capabilities.phoneInCapability.equals("yes"));
+        }
+        else {
+            //in case the user has no capabilities make sure that a login occurs to shut of any remainimg call in capabilities
+            // the call out function in that case has already been blocked inside the scanURL function
+            // (when the user presses the call button)
+            phone.login(clientNameTextBox.getText().toString(),true,false);
+
+
+        }
+    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        mainButton = (ImageButton) findViewById(R.id.main_button);
-        mainButton.setOnClickListener(this);
 
         logTextBox = (EditText) findViewById(R.id.log_text_box);
-        outgoingTextBox = (EditText) findViewById(R.id.outgoing_client);
-        clientNameTextBox = (EditText) findViewById(R.id.client_name);
-        clientNameTextBox.setText(DEFAULT_CLIENT_NAME);
-        capabilitesButton = (Button) findViewById(R.id.capabilites_button);
-        capabilitesButton.setOnClickListener(this);
-        outgoingCheckBox = (CheckBox) findViewById(R.id.outgoing);
-        incomingCheckBox = (CheckBox) findViewById(R.id.incoming);
-        inputSelect = (RadioGroup) findViewById(R.id.input_select);
-        inputSelect.setOnCheckedChangeListener(this);
 
 
         // status bar
@@ -250,24 +281,20 @@ public class mainActivity extends Activity implements LoginListener,
 
         //mWebView.loadUrl(skinUrl);
 
-
-        //auto login phone user intop Ringer
-        phoneUser.loginAtRinger();
-        userMessage(phoneUser.settings.name);
-
-
-
         phone = provider.getInstance(getApplicationContext());
 
         phone.setListeners(this, this, this);
 
-        phone.login(clientNameTextBox.getText().toString(),
-                outgoingCheckBox.isChecked(),
-                incomingCheckBox.isChecked());
+        //providerUpdateCapabilities();
 
 
-
-
+        //auto login phone user intop Ringer
+        // this login call causes the following state changes
+           // settings file is read and phoneUser.settings are initialized during ringer login
+           // if login resuòlt is OK phoneUser.capabilities are set, based on the login response
+           // if capabilities havce changed (always the case in the firts login after creation)
+           // a login to the provider is done
+        phoneUser.loginAtRinger();
     }
 
     @Override
@@ -299,50 +326,17 @@ public class mainActivity extends Activity implements LoginListener,
 
     @Override
     public void onClick(View view) {
-        if (view.getId() == R.id.main_button) {
-            if (!phone.isConnected()) {
-                Map<String, String> params = new HashMap<String, String>();
-                if (outgoingTextBox.getText().length() > 0) {
-                    String number = outgoingTextBox.getText().toString();
-                    if (inputSelect.getCheckedRadioButtonId() == R.id.input_text) {
-                        number = "client:" + number;
-                    }
-                    params.put("To", number);
-                }
-                phone.connect(params);
-            } else
-                phone.disconnect();
-        } else if (view.getId() == R.id.capabilites_button) {
-            phone.disconnect();
-            phone.login(clientNameTextBox.getText().toString(),
-                    outgoingCheckBox.isChecked(),
-                    incomingCheckBox.isChecked());
-        }
+
     }
 
     @Override
     public void onCheckedChanged(RadioGroup group, int checkedId) {
-        if (group.getId() == R.id.input_select) {
-            if (checkedId == R.id.input_number) {
-                outgoingTextBox.setInputType(InputType.TYPE_CLASS_PHONE);
-                outgoingTextBox.setHint(R.string.outgoing_number);
-            } else {
-                outgoingTextBox.setInputType(InputType.TYPE_CLASS_TEXT);
-                outgoingTextBox.setHint(R.string.outgoing_client);
-            }
-            outgoingTextBox.setText("");
-        }
+
     }
 
     @Override
     public void onCheckedChanged(CompoundButton button, boolean isChecked) {
-        /*
-        if (button.getId() == R.id.speaker_toggle) {
-            phone.setSpeakerEnabled(isChecked);
-        } else if (button.getId() == R.id.mute_toggle){
-        	phone.setCallMuted(isChecked);
-        }
-        */
+
     }
 
     private void addStatusMessage(final String message) {
@@ -370,27 +364,22 @@ public class mainActivity extends Activity implements LoginListener,
                 if (phone.isConnected()) {
                     switch (phone.getConnectionState()) {
                         case DISCONNECTED:
-                            mainButton.setImageResource(R.drawable.idle);
                             statusMessage("Disconnected");
                             uiShowState("disconnected");
                             break;
                         case CONNECTED:
-                            mainButton.setImageResource(R.drawable.inprogress);
                             statusMessage("Connected");
                             uiShowState("Connected");
                             break;
                         default:
-                            mainButton.setImageResource(R.drawable.dialing);
                             statusMessage("Dialing");
                             uiShowState("dialing");
                             break;
                     }
                 } else if (phone.hasPendingConnection()) {
-                    mainButton.setImageResource(R.drawable.dialing);
                     statusMessage("Pending connection");
                     uiShowState("pending");
                 } else {
-                    mainButton.setImageResource(R.drawable.idle);
                     statusMessage("Ready");
                     uiShowState("ready");
 

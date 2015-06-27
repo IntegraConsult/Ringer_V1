@@ -28,11 +28,18 @@ class userSettings implements Serializable {
     String phone = "";
 }
 
+class userCapabilities {
+    String phoneInCapability = "";
+    String phoneOutCapability = "";
+
+}
+
 public class user {
     private Context mainContext;
     private mainActivity mainAct;
 
     public userSettings settings = new userSettings();
+    public userCapabilities capabilities= new userCapabilities();
 
     //public String ringerLoginUrl ="http://twilio/unapps.net/login.php";
     //public String ringerRegisterUrl ="http://twilio/unapps.net/register.php";
@@ -64,37 +71,60 @@ public class user {
         JSONObject response ;
         String url ;
         String loginStatus;
-        Log.d(TAG,"handling web response");
+        String phoneInCapability;
+        String phoneOutCapability;
+
+        Log.d(TAG,"handling web response" + webResponse);
         try {
             response = new JSONObject(webResponse);
             url = response.getString("url");
+
+            // handle the login response
             if (url.equals("ringer/login")) {
                 loginStatus = response.getString("status");
                 if (loginStatus.equals("OK")) {
                     Log.d(TAG,"login status OK");
+                    phoneOutCapability = response.getString("phoneOutCapability");
+                    phoneInCapability = response.getString("phoneInCapability");
+                    if ( !( phoneInCapability.equals(this.capabilities.phoneOutCapability) &&
+                            phoneOutCapability.equals(this.capabilities.phoneOutCapability)
+                          )
+                    ){
+                        // aparently user capabilities have changed since last login
+                        Log.d(TAG, "capabilities have changed");
+                        this.capabilities.phoneOutCapability = phoneOutCapability;
+                        this.capabilities.phoneInCapability = phoneInCapability;
+
+                        mainAct.providerLogin();
+                    }
+
+                    this.capabilities.phoneOutCapability = phoneOutCapability;
+                    this.capabilities.phoneInCapability = phoneInCapability;
+
                     // continue with phone processing
                     mainAct.showUI();
+                    mainAct.userMessage(settings.name);
+
                 }
                 else {
-                    Log.d(TAG,"Login error show registration page");
+                    Log.d(TAG,"Login status: error ");
                     mainAct.showSettings();
                 }
             }
+            // handle the rigistration response
             else if (url.equals("ringer/register")) {
                 // after registration auto-login (again)
                 loginAtRinger();
             }
             else {
-                Log.e(TAG,"Error i loginhandler, unknown url");
+                Log.e(TAG,"Error in loginhandler, unknown url");
             }
         }
         catch (JSONException e){
-            Log.d(TAG,"handle web response JSON error");
+            Log.e(TAG,"handle web response JSON error");
 
         }
 
-
-        Log.d(TAG,"handling web respopnse" + webResponse);
 
     }
 
@@ -106,14 +136,14 @@ public class user {
 
         //check length of uuid
         if (settings.uuid.length() >15 ) {
-            Log.d(TAG,"login at Ringer UUID passed first inspection");
+            //Log.d(TAG,"login at Ringer UUID passed first inspection");
             // encrypt settings
             String encryptedSettings = encryptSettings();
             web.get(ringerLoginUrl, encryptedSettings);
             // web.get will invoke handle webresponse inside the parent class;
         }
         else {
-            Log.d(TAG, "UUID did not pas first inspection so show the registration page (5)");
+            //Log.d(TAG, "UUID did not pas first inspection so show the registration page (5)");
             //show page 5 contains:
                  //on save.click :
                     //save user.settings to file
@@ -139,7 +169,7 @@ public class user {
     public String  encryptSettings () {
         String settingsString = this.settings.name + "_" + this.settings.phone + "_" + this.settings.code + "_" + this.settings.uuid;
        String encryptedSettings;
-       Log.d(TAG,"sttingsString  is " + settingsString);
+       //Log.d(TAG,"settingsString  is " + settingsString);
        //encrypt json
        encryptedSettings = settingsString;
        return encryptedSettings;
@@ -157,7 +187,7 @@ public class user {
             in.close();
             fileIn.close();
         } catch (Exception i) {
-            Log.d(TAG, "IO error while reading settings, probably file notfound");
+            Log.e(TAG, "IO error while reading settings, probably file notfound");
             //i.printStackTrace();
             return;
         }
@@ -186,10 +216,10 @@ public class user {
             fos.close();
 
         } catch (IOException ei) {
-            Log.d(TAG, "java io error");
+            Log.e(TAG, "java io error");
             ei.printStackTrace();
         } catch (Exception any) {
-            Log.d(TAG, "weird write error");
+            Log.e(TAG, "weird write error");
 
         }
 

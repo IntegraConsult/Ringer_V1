@@ -257,6 +257,8 @@ public class mainActivity extends Activity implements LoginListener,
         setContentView(R.layout.main);
 
 
+
+
         logTextBox = (EditText) findViewById(R.id.log_text_box);
 
 

@@ -1,38 +1,33 @@
 package com.twilio.example.basicphone;
 
+import android.net.Uri;
 import android.util.Log;
 
-import org.apache.http.HeaderElement;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
+
 
 
 public class webConnection {
     user parentAct;
-    private String TAG = "Ringer";
+    String TAG = "Ringer";
     public webConnection(user act) {
         this.parentAct = act;
 
     }
-
+/*
     public void post(String url,String parameters){
 
 
@@ -57,7 +52,7 @@ public class webConnection {
         try {
             HttpResponse response = httpClient.execute(httpPost);
 
-            Log.d(TAG,"Response of GET request" + response.toString());
+            Log.d(TAG,"Response of POST request" + response.toString());
 
         }
         catch (ClientProtocolException e) {
@@ -73,17 +68,23 @@ public class webConnection {
         // <uses-permission android:name="android.permission.INTERNET" />
 
     }
+*/
     public void get(String url,String query) {
-        String response_text = null;
+        String responseText;
 
-        HttpEntity entity = null;
+        HttpEntity entity;
 
         //Create an object of HttpClient
 
         HttpClient client = new DefaultHttpClient();
         // Create an object of HttpGet
 
-        HttpGet request = new HttpGet(url + "?parameters=" + query);
+
+
+
+        String requestUrl = url + "?parameters=" + Uri.encode(query);
+
+        HttpGet request = new HttpGet(requestUrl);
 
         // Finally make HTTP request
 
@@ -92,15 +93,15 @@ public class webConnection {
             response = client.execute(request);
             entity = response.getEntity();
 
-            String responseText = getResponseBody(entity);
+            responseText = getResponseBody(entity);
             parentAct.handleWebResponse(responseText);
 
             //Log.d(TAG,"Response of GET request" + responseText);//response.getEntity().toString());
         } catch (ClientProtocolException e) {
-            // TODO Auto-generated catch block
+            Log.e(TAG,"web.get client protocol exception");
             e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            Log.e(TAG,"web.get IOException");
             e.printStackTrace();
         }
 
@@ -162,7 +163,7 @@ public class webConnection {
         return buffer.toString();
 
     }
-
+/*
     public String getContentCharSet(final HttpEntity entity) throws ParseException {
 
         if (entity == null) { throw new IllegalArgumentException("HTTP entity may not be null"); }
@@ -190,4 +191,5 @@ public class webConnection {
         return charset;
 
     }
+*/
 }

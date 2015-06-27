@@ -48,7 +48,7 @@ public class mainActivity extends Activity implements LoginListener,
     private static final Handler handler = new Handler();
 
     private provider phone;
-    private ringer account;
+
 
 
 
@@ -58,14 +58,13 @@ public class mainActivity extends Activity implements LoginListener,
     private RadioGroup inputSelect;
     private EditText outgoingTextBox;
     private EditText clientNameTextBox;
-    private Button capabilitesButton;
+    Button capabilitesButton;
     private CheckBox incomingCheckBox, outgoingCheckBox;
 
     private String TAG = "Ringer";
-    private String contactJson = "";
-    private static String prefix = "+39";
-    private String skinUrl = "file:///android_asset/skins/samsung/index.html";
 
+    private String skinUrl = "file:///android_asset/skins/samsung/index.html";
+    private String settingsUrl = "file:///android_asset/skins/samsung/settings.html";
     private TextView statusBar;
     private TextView userBar;
 
@@ -84,17 +83,25 @@ public class mainActivity extends Activity implements LoginListener,
     }
 
     public void showPage(int page) {
-        mWebView.loadUrl("javascript: switch_to_page('" + page + "')");
+        mWebView.loadUrl("javascript: switch_to_page('" + page + "');");
     }
 
+    public void showSettings() {
+        mWebView.loadUrl(settingsUrl);
 
+    }
+
+    public void showUI() {
+        mWebView.loadUrl(skinUrl);
+
+    }
     private WebView mWebView;
 
     private class MyWebViewClient extends WebViewClient {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            if (url != skinUrl) {
+            if ((!url.equals(skinUrl))&&(!url.equals(settingsUrl))) {
                 view.goBack();
                 scanUrl(url);
                 return true;
@@ -125,7 +132,7 @@ public class mainActivity extends Activity implements LoginListener,
         String json, result, action;
 
         final JSONObject payload;
-        JSONException exception;
+
         result = java.net.URLDecoder.decode(url);
         //Log.d(TAG, "interpreting url" + result);
         // trim of everything from the url except the bit after last slash
@@ -136,8 +143,9 @@ public class mainActivity extends Activity implements LoginListener,
         //Log.d(TAG, "interpreting json" + json);
 
 
-        action = "";
         try {
+
+
             payload = new JSONObject(json);
             action = payload.getString("action");
             Log.d(TAG, "interpreting jsonobject.action: " + action);
@@ -163,14 +171,16 @@ public class mainActivity extends Activity implements LoginListener,
             } else if (action.equals("saveUser")) {
                 final JSONObject mUser;
                 mUser = payload.getJSONObject("arguments");
-                Log.d(TAG, "save user " + mUser.getString("name"));
-                phoneUser.saveSettings(
-                        mUser.getString("name"),
-                        mUser.getString("code"),
-                        mUser.getString("phone"),
-                        mUser.getString("phone") +
-                                mUser.getString("name") +
-                                mUser.getString("code"));
+                String name = mUser.getString("name");
+                String code = mUser.getString("code");
+                String phone = mUser.getString("phone");
+
+                String uuid = phoneUser.createUuid(name,code,phone) ;
+                Log.d(TAG, "save user " + name);
+
+
+                phoneUser.saveSettings(name,code,phone,uuid);
+
                 phoneUser.registerAtRinger();
 
             } else if (action.equals("phoneVolume")) {
@@ -193,7 +203,7 @@ public class mainActivity extends Activity implements LoginListener,
         } catch (JSONException e) {
             Log.e(TAG, "json parsing error");
         }
-        ;
+
 
 
     }
@@ -237,7 +247,8 @@ public class mainActivity extends Activity implements LoginListener,
         // Enable Javascript
         WebSettings webSettings = mWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
-        mWebView.loadUrl(skinUrl);
+
+        //mWebView.loadUrl(skinUrl);
 
 
         //auto login phone user intop Ringer

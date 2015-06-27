@@ -377,7 +377,6 @@ public class provider implements DeviceListener,
             String capabilityToken = null;
             try {
                 capabilityToken = HttpHelper.httpGet(params[0]);
-                ;
             } catch (Exception e) {
                 e.printStackTrace();
             }

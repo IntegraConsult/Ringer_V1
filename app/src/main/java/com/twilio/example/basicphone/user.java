@@ -12,7 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -21,9 +20,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-/**
- * Created by admin on 22/06/2015.
- */
+
 class userSettings implements Serializable {
     String uuid = "";
     String code = "";
@@ -39,8 +36,8 @@ public class user {
 
     //public String ringerLoginUrl ="http://twilio/unapps.net/login.php";
     //public String ringerRegisterUrl ="http://twilio/unapps.net/register.php";
-    public String ringerLoginUrl ="http://192.168.1.107/ringer/login.php";
-    public String ringerRegisterUrl ="http://192.168.1.107/ringer/register.php";
+    public String ringerLoginUrl ="http://192.168.1.104/ringer/login.php";
+    public String ringerRegisterUrl ="http://192.168.1.104/ringer/register.php";
 
 
     public String contacts = "";
@@ -53,7 +50,7 @@ public class user {
 
 
     public user(Context context, mainActivity act) {
-        String localSettings = "";
+
         this.mainContext = context;
         this.mainAct = act;
         web = new webConnection(this);
@@ -64,21 +61,23 @@ public class user {
     }
 
     public void handleWebResponse(String webResponse) {
-        JSONObject response = null;
-        String url = null;
-        String loginStatus = null;
-        Log.d(TAG,"handling web respnse");
+        JSONObject response ;
+        String url ;
+        String loginStatus;
+        Log.d(TAG,"handling web response");
         try {
             response = new JSONObject(webResponse);
             url = response.getString("url");
             if (url.equals("ringer/login")) {
                 loginStatus = response.getString("status");
-                if (!loginStatus.equals("OK")) {
+                if (loginStatus.equals("OK")) {
                     Log.d(TAG,"login status OK");
                     // continue with phone processing
+                    mainAct.showUI();
                 }
                 else {
-                    mainAct.showPage(5);
+                    Log.d(TAG,"Login error show registration page");
+                    mainAct.showSettings();
                 }
             }
             else if (url.equals("ringer/register")) {
@@ -133,12 +132,12 @@ public class user {
         String encryptedSettings = encryptSettings();
         //doo http request call Ringerregistration?q=encryptedjson
         //3.on response loginAtRinger
-        web.get(ringerRegisterUrl,encryptedSettings);
+        web.get(ringerRegisterUrl, encryptedSettings);
 
     }
 
     public String  encryptSettings () {
-        String settingsString = this.settings.name + "/" + this.settings.phone + "/" + this.settings.code;
+        String settingsString = this.settings.name + "_" + this.settings.phone + "_" + this.settings.code + "_" + this.settings.uuid;
        String encryptedSettings;
        Log.d(TAG,"sttingsString  is " + settingsString);
        //encrypt json
@@ -146,6 +145,9 @@ public class user {
        return encryptedSettings;
     }
 
+    public String createUuid(String name, String code, String phone) {
+        return name + "-" + code + "-" + phone;
+    }
 
     public void readSettings() {
         try {
@@ -159,12 +161,13 @@ public class user {
             //i.printStackTrace();
             return;
         }
+/*
         Log.d(TAG, "Deserialized usersettings...");
         Log.d(TAG, "name: " + this.settings.name);
         Log.d(TAG, "code: " + this.settings.code);
         Log.d(TAG, "phone: " + this.settings.phone);
         Log.d(TAG, "uuid: " + this.settings.uuid);
-
+*/
     }
 
     public void saveSettings(String name, String code, String phone, String uuid) {
@@ -207,12 +210,8 @@ public class user {
         Uri PhoneCONTENT_URI = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String Phone_CONTACT_ID = ContactsContract.CommonDataKinds.Phone.CONTACT_ID;
         String NUMBER = ContactsContract.CommonDataKinds.Phone.NUMBER;
-        Uri EmailCONTENT_URI = ContactsContract.CommonDataKinds.Email.CONTENT_URI;
-        String EmailCONTACT_ID = ContactsContract.CommonDataKinds.Email.CONTACT_ID;
-        String DATA = ContactsContract.CommonDataKinds.Email.DATA;
-        String contactName, contactEmail, contactPhone;
-        int contactCount = 0;
-        String contactJson = "";
+        String contactName, contactPhone;
+        String contactJson ;
         mCursor = phoneContacts.query(
 
                 CONTENT_URI,  // The content URI of the words table: FROM table_name
@@ -232,7 +231,7 @@ public class user {
             Log.d(TAG, "SQLLite " + mCursor.getCount() + " matches");
             contactJson = "[";
             while (mCursor.moveToNext()) {
-                contactName = contactEmail = contactPhone = "";
+                contactPhone = "";
                 // Gets the value from the column.
                 //Log.d(TAG,"iterate result");
                 String contact_id = mCursor.getString(mCursor.getColumnIndex(_ID));
@@ -247,14 +246,7 @@ public class user {
                         contactPhone = phoneCursor.getString(phoneCursor.getColumnIndex(NUMBER));
                     }
                     phoneCursor.close();
-    /*
-                        // Query and loop for every email of the contact
-                        Cursor emailCursor = phoneContacts.query(EmailCONTENT_URI, null, EmailCONTACT_ID + " = ?", new String[]{contact_id}, null);
-                        while (emailCursor.moveToNext()) {
-                            contactEmail = emailCursor.getString(emailCursor.getColumnIndex(DATA));
-                        }
-                        emailCursor.close();
-   */
+
                 }
                 if (!contactPhone.equals("")) {
                     // purify phone numbers

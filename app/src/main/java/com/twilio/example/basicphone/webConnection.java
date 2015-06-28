@@ -129,15 +129,6 @@ public class webConnection {
         }
         String charset = HTTP.DEFAULT_CONTENT_CHARSET;
 
-/*
-        String charset = getContentCharSet(entity);
-
-        if (charset == null) {
-
-            charset = HTTP.DEFAULT_CONTENT_CHARSET;
-
-        }
-*/
         Reader reader = new InputStreamReader(instream, charset);
 
         StringBuilder buffer = new StringBuilder();
@@ -163,33 +154,5 @@ public class webConnection {
         return buffer.toString();
 
     }
-/*
-    public String getContentCharSet(final HttpEntity entity) throws ParseException {
 
-        if (entity == null) { throw new IllegalArgumentException("HTTP entity may not be null"); }
-
-        String charset = null;
-
-        if (entity.getContentType() != null) {
-
-            HeaderElement values[] = entity.getContentType().getElements();
-
-            if (values.length > 0) {
-
-                NameValuePair param = values[0].getParameterByName("charset");
-
-                if (param != null) {
-
-                    charset = param.getValue();
-
-                }
-
-            }
-
-        }
-
-        return charset;
-
-    }
-*/
 }

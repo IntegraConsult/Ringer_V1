@@ -1,14 +1,10 @@
 package com.twilio.example.basicphone;
 
-/**
- * Created by admin on 19/06/2015.
- */
 
-import android.app.Activity;
+
+
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.util.Log;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +12,7 @@ public class device {
     private Context mainContext;
     public float leftVolume;
     public float rightVolume;
-    private String TAG = "Ringer";
+    //private String TAG = "Ringer";
 
 
     Map<String, Integer> map = new HashMap<String, Integer>();

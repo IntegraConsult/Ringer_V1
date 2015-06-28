@@ -8,12 +8,5 @@
         sha1="e06a5ccf4abb8800ad35324f970fd7997f6f1add">
         <dex dex="/Users/admin/AndroidStudioProjects/Ringer_V1/app/build/intermediates/pre-dexed/debug/twilioclient-android-3766dde90add15a0ab30b1326ceaf3e3c4ed4454.jar" />
     </item>
-    <item
-        jar="/Users/admin/AndroidStudioProjects/BasicPhone1/app/libs/twilioclient-android.jar"
-        jumboMode="false"
-        revision="22.0.1"
-        sha1="e06a5ccf4abb8800ad35324f970fd7997f6f1add">
-        <dex dex="/Users/admin/AndroidStudioProjects/BasicPhone1/app/build/intermediates/pre-dexed/debug/twilioclient-android-4d5f78a4e3e53488e58468e7ea1bb6e2628dde1a.jar" />
-    </item>
 
 </items>

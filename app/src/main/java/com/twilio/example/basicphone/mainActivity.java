@@ -17,18 +17,14 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.RadioGroup;
+
 import android.widget.TextView;
 
 import com.twilio.example.basicphone.provider.BasicConnectionListener;
@@ -42,8 +38,7 @@ public class mainActivity extends Activity implements LoginListener,
         BasicConnectionListener,
         BasicDeviceListener,
         View.OnClickListener,
-        CompoundButton.OnCheckedChangeListener,
-        RadioGroup.OnCheckedChangeListener {
+        CompoundButton.OnCheckedChangeListener {
     private static final String DEFAULT_CLIENT_NAME = "jenny";
 
     private static final Handler handler = new Handler();
@@ -53,14 +48,8 @@ public class mainActivity extends Activity implements LoginListener,
 
 
 
-    private ImageButton mainButton;
     private EditText logTextBox;
     private AlertDialog incomingAlert;
-    private RadioGroup inputSelect;
-    private EditText outgoingTextBox;
-    private EditText clientNameTextBox;
-    Button capabilitesButton;
-    private CheckBox incomingCheckBox, outgoingCheckBox;
 
     private String TAG = "Ringer";
 
@@ -73,7 +62,7 @@ public class mainActivity extends Activity implements LoginListener,
     private device mDevice;
 
     public void statusAlert(String message){
-        this.statusBar.setTextColor(Color.RED);;
+        this.statusBar.setTextColor(Color.RED);
         this.statusBar.setText(message);
     }
     public void statusMessage(String message) {
@@ -198,11 +187,10 @@ public class mainActivity extends Activity implements LoginListener,
                 String code = mUser.getString("code");
                 String phone = mUser.getString("phone");
 
-                String uuid = phoneUser.createUuid(name,code,phone) ;
                 Log.d(TAG, "save user " + name);
 
 
-                phoneUser.saveSettings(name,code,phone,uuid);
+                phoneUser.saveSettings(name,code,phone);
 
                 phoneUser.registerAtRinger();
 
@@ -236,7 +224,7 @@ public class mainActivity extends Activity implements LoginListener,
         //        outgoingCheckBox.isChecked(),
         //        incomingCheckBox.isChecked());
         if (phoneUser.capabilities.phoneInCapability.equals("yes")||phoneUser.capabilities.phoneOutCapability.equals("yes") ) {
-            phone.login("jenny",
+            phone.login(DEFAULT_CLIENT_NAME,
                     phoneUser.capabilities.phoneOutCapability.equals("yes"),
                     phoneUser.capabilities.phoneInCapability.equals("yes"));
         }
@@ -244,7 +232,7 @@ public class mainActivity extends Activity implements LoginListener,
             //in case the user has no capabilities make sure that a login occurs to shut of any remainimg call in capabilities
             // the call out function in that case has already been blocked inside the scanURL function
             // (when the user presses the call button)
-            phone.login(clientNameTextBox.getText().toString(),true,false);
+            phone.login(DEFAULT_CLIENT_NAME,true,false);
 
 
         }
@@ -331,10 +319,7 @@ public class mainActivity extends Activity implements LoginListener,
 
     }
 
-    @Override
-    public void onCheckedChanged(RadioGroup group, int checkedId) {
 
-    }
 
     @Override
     public void onCheckedChanged(CompoundButton button, boolean isChecked) {

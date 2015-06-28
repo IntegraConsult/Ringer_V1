@@ -22,7 +22,6 @@ import java.io.Serializable;
 
 
 class userSettings implements Serializable {
-    String uuid = "";
     String code = "";
     String name = "";
     String phone = "";
@@ -43,8 +42,7 @@ public class user {
 
     //public String ringerLoginUrl ="http://twilio/unapps.net/login.php";
     //public String ringerRegisterUrl ="http://twilio/unapps.net/register.php";
-    public String ringerLoginUrl ="http://192.168.1.104/ringer/login.php";
-    public String ringerRegisterUrl ="http://192.168.1.104/ringer/register.php";
+    public String ringerServiceUrl ="http://192.168.1.104/ringer/service.php";
 
 
     public String contacts = "";
@@ -53,6 +51,14 @@ public class user {
     private ContentResolver phoneContacts;
     private String TAG = "Ringer";
     private webConnection web ;
+
+    final static int ACTION_ERROR = 0;
+    final static int ACTION_LOGIN = 1;
+    final static int ACTION_REGISTER = 2;
+    final static int ACTION_SET_CAPABILITIES = 3;
+    final static int ACTION_REGISTRATION_OK = 4 ;
+
+
 
 
 
@@ -69,27 +75,23 @@ public class user {
 
     public void handleWebResponse(String webResponse) {
         JSONObject response ;
-        String url ;
-        String loginStatus;
         String phoneInCapability;
         String phoneOutCapability;
 
         Log.d(TAG,"handling web response" + webResponse);
         try {
             response = new JSONObject(webResponse);
-            url = response.getString("url");
-
-            // handle the login response
-            if (url.equals("ringer/login")) {
-                loginStatus = response.getString("status");
-                if (loginStatus.equals("OK")) {
+            int action = response.getInt("action");
+            switch (action) {
+                case ACTION_SET_CAPABILITIES:
                     Log.d(TAG,"login status OK");
-                    phoneOutCapability = response.getString("phoneOutCapability");
-                    phoneInCapability = response.getString("phoneInCapability");
+                    JSONObject parameters = response.getJSONObject("parameters");
+                    phoneOutCapability = parameters.getString("phoneOutCapability");
+                    phoneInCapability = parameters.getString("phoneInCapability");
                     if ( !( phoneInCapability.equals(this.capabilities.phoneOutCapability) &&
                             phoneOutCapability.equals(this.capabilities.phoneOutCapability)
-                          )
-                    ){
+                    )
+                            ){
                         // aparently user capabilities have changed since last login
                         Log.d(TAG, "capabilities have changed");
                         this.capabilities.phoneOutCapability = phoneOutCapability;
@@ -100,25 +102,31 @@ public class user {
 
                     this.capabilities.phoneOutCapability = phoneOutCapability;
                     this.capabilities.phoneInCapability = phoneInCapability;
+                    Log.d(TAG,"capabilities set to phonein:" +this.capabilities.phoneInCapability + " phoneout:" + this.capabilities.phoneOutCapability);
 
                     // continue with phone processing
                     mainAct.showUI();
                     mainAct.userMessage(settings.name);
-
-                }
-                else {
-                    Log.d(TAG,"Login status: error ");
+                    mainAct.providerLogin();
+                    break;
+                case ACTION_ERROR :
+                    String message = response.getString("parameters");
+                    Log.e(TAG, message);
+                    break;
+                case ACTION_REGISTER:
                     mainAct.showSettings();
-                }
+                    //registerAtRinger();
+                    break;
+                case ACTION_REGISTRATION_OK :
+                    Log.d(TAG,"regsitered successfully");
+                    mainAct.showUI();
+                    loginAtRinger();
+                    break;
+                default:
+                    Log.e(TAG,"web response error : unkonwn action " + action);
+                    break;
             }
-            // handle the rigistration response
-            else if (url.equals("ringer/register")) {
-                // after registration auto-login (again)
-                loginAtRinger();
-            }
-            else {
-                Log.e(TAG,"Error in loginhandler, unknown url");
-            }
+
         }
         catch (JSONException e){
             Log.e(TAG,"handle web response JSON error");
@@ -132,24 +140,29 @@ public class user {
         Log.d(TAG,"Log into ringer");
         //get user settings
         readSettings();
-        Log.d(TAG, " uuid is " + this.settings.uuid);
 
-        //check length of uuid
-        if (settings.uuid.length() >15 ) {
-            //Log.d(TAG,"login at Ringer UUID passed first inspection");
-            // encrypt settings
-            String encryptedSettings = encryptSettings();
-            web.get(ringerLoginUrl, encryptedSettings);
-            // web.get will invoke handle webresponse inside the parent class;
-        }
-        else {
-            //Log.d(TAG, "UUID did not pas first inspection so show the registration page (5)");
+        //check length of code
+        if (settings.code.length() != 4) {
             //show page 5 contains:
                  //on save.click :
                     //save user.settings to file
                     // register at ringer
-            mainAct.showPage(5);
+            mainAct.showSettings();
 
+        } else {
+            //Log.d(TAG,"login at Ringer code passed first inspection");
+            // encrypt settings
+            JSONObject payload = new JSONObject();
+            try {
+                payload.put("action",ACTION_LOGIN);
+                payload.put("code",this.settings.code);
+                payload.put("phone",this.settings.phone);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            String encryptedPayload = encrypt(payload.toString());
+            web.get(ringerServiceUrl, encryptedPayload);
+            // web.get will invoke handle webresponse inside the parent class;
         }
 
 
@@ -158,26 +171,30 @@ public class user {
     public void registerAtRinger() {
         readSettings();
         //encrypt settings
-
-        String encryptedSettings = encryptSettings();
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("action",ACTION_REGISTER);
+            payload.put("code",this.settings.code);
+            payload.put("phone",this.settings.phone);
+            payload.put("name",this.settings.name);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        String encryptedPayload = encrypt(payload.toString());
         //doo http request call Ringerregistration?q=encryptedjson
         //3.on response loginAtRinger
-        web.get(ringerRegisterUrl, encryptedSettings);
+        web.get(ringerServiceUrl, encryptedPayload);
 
     }
 
-    public String  encryptSettings () {
-        String settingsString = this.settings.name + "_" + this.settings.phone + "_" + this.settings.code + "_" + this.settings.uuid;
+    public String  encrypt (String arg) {
        String encryptedSettings;
        //Log.d(TAG,"settingsString  is " + settingsString);
        //encrypt json
-       encryptedSettings = settingsString;
+       encryptedSettings = arg;
        return encryptedSettings;
     }
 
-    public String createUuid(String name, String code, String phone) {
-        return name + "-" + code + "-" + phone;
-    }
 
     public void readSettings() {
         try {
@@ -187,25 +204,23 @@ public class user {
             in.close();
             fileIn.close();
         } catch (Exception i) {
-            Log.e(TAG, "IO error while reading settings, probably file notfound");
+            Log.e(TAG, "IO error while reading settings");
             //i.printStackTrace();
-            return;
+
         }
-/*
+/**/
         Log.d(TAG, "Deserialized usersettings...");
         Log.d(TAG, "name: " + this.settings.name);
         Log.d(TAG, "code: " + this.settings.code);
         Log.d(TAG, "phone: " + this.settings.phone);
-        Log.d(TAG, "uuid: " + this.settings.uuid);
-*/
+/**/
     }
 
-    public void saveSettings(String name, String code, String phone, String uuid) {
+    public void saveSettings(String name, String code, String phone) {
         userSettings mSettings = new userSettings();
         mSettings.name = name;
         mSettings.code = code;
         mSettings.phone = phone;
-        mSettings.uuid = uuid;
         try {
 
             FileOutputStream fos = this.mainContext.openFileOutput("settings.ser", Context.MODE_PRIVATE);
@@ -298,7 +313,9 @@ public class user {
 
 
             }
+
             // end of while loop
+            mCursor.close();
             //skip last ,
             contactJson = contactJson.substring(0, contactJson.length() - 1);
             contactJson += "]";

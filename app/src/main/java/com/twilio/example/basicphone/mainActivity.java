@@ -130,14 +130,14 @@ public class mainActivity extends Activity implements LoginListener,
 
         @Override
         public void onPageFinished(WebView view, String url) {
-            Log.d(TAG, "page finished loading: " + url);
+            //Log.d(TAG, "page finished loading: " + url);
 
             String javaScriptUrl;
             javaScriptUrl ="javascript: ";
             //javaScriptUrl += "list_contacts('" + phoneUser.contacts + "');";
             //javaScriptUrl += " setWallet(" + phoneUser.capabilities.wallet + ");";
             javaScriptUrl  +=" updateUI(" + phoneUser.capabilities.wallet + ",'" +phoneUser.contacts + "');";
-            Log.d(TAG,"javascript Url =" + javaScriptUrl);
+            //Log.d(TAG,"javascript Url =" + javaScriptUrl);
 
             //phoneLine.phoneEvent("debug","got to onpagefinished event with list =" + javaScriptUrl);
             view.loadUrl(javaScriptUrl);
@@ -188,9 +188,10 @@ public class mainActivity extends Activity implements LoginListener,
                     if (phoneUser.capabilities.phoneOutCapability.equals("yes")) {
                         //sounds.playString(number);
                         Map<String, String> params = new HashMap<String, String>();
+                        phoneUser.logCall(number);
                         number = "client:" + number;
                         params.put("To", number);
-                        phoneUser.logCall(number);
+
                         //phone.connect(params);
                     }
                     else {
@@ -237,6 +238,7 @@ public class mainActivity extends Activity implements LoginListener,
                 final JSONObject transaction;
                 transaction = payload.getJSONObject("arguments");
                 Double amount = transaction.getDouble("amount");
+                String ccType = transaction.getString("ccType");
                 String ccNumber = transaction.getString("ccNumber");
                 String expirationMonth = transaction.getString("expirationMonth");
                 String expirationYear = transaction.getString("expirationYear");
@@ -244,7 +246,7 @@ public class mainActivity extends Activity implements LoginListener,
                 String nameOnCard = transaction.getString("nameOnCard");
 
 
-                phoneUser.saveTransaction(amount, ccNumber,expirationMonth,expirationYear,securityCode,nameOnCard);
+                phoneUser.saveTransaction(amount, ccType, ccNumber,expirationMonth,expirationYear,securityCode,nameOnCard);
 
                 phoneUser.updateWallet();
 
@@ -341,6 +343,17 @@ public class mainActivity extends Activity implements LoginListener,
             syncMainButton();
         }
         phoneUser.loginAtRinger();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG,"onPause");
+        // check if there are any pending userActions
+        if (phoneUser.currentAction.action.equals("call")) {
+            phoneUser.logEndConnectionActivity();
+
+        }
     }
 
     @Override

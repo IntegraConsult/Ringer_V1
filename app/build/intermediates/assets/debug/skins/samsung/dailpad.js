@@ -135,6 +135,15 @@ function list_contacts(json) {
   });   
 }
 
+function setWallet (wallet) {
+	console.log("setting wallet to " + wallet);
+	jQuery('#wallet').html(wallet);
+}
+
+function updateUI(wallet,jsonContacts) {
+  setWallet(wallet);
+  list_contacts(jsonContacts);
+}
 function add_key (number,key) {
   number.append(key);
   EM_proxy('key',key);
@@ -163,6 +172,7 @@ jQuery('document').ready(function (){
    //show_state("connected");
    
     switch_to_page(0);
+    //setWallet(10.1);
   
    //var json =            "[" +
                 "{\"name\":\"Ad Langenkamp\",\"phoneNumber\":\"00393336948230\"}," +
@@ -175,12 +185,14 @@ jQuery('document').ready(function (){
 
   var dials = jQuery(".dials ol li");
    
-  var selection = jQuery(".header ol li");
+  var selection = jQuery(".header.prime ol li");
+  var subSelection = jQuery(".header.sub ol li");
   var contacts_index = jQuery("#contacts-index ol li");
   var favourites_index = jQuery("#favourites-index ol li");
     
   
   var page_index = 0;
+  var sub_page_index = 0;
   var index = 0 ;
   
   
@@ -206,12 +218,25 @@ jQuery('document').ready(function (){
   selection.click(function(){
     page_index = selection.index(this);
     selection.removeClass('selected');
+    subSelection.removeClass('selected');
+    
     var choice = jQuery(".header ol li").eq(page_index);
     choice.addClass('selected');
     jQuery('.page').hide();
     jQuery('#page_' + page_index).show();
     
   });
+  
+  
+  subSelection.click(function(){
+	    sub_page_index = subSelection.index(this);
+	    subSelection.removeClass('selected');
+	    var choice = jQuery(".header.sub ol li").eq(sub_page_index);
+	    choice.addClass('selected');
+	    jQuery('.page.sub').hide();
+	    jQuery('#page_' + page_index + '_' + sub_page_index).show();
+	    
+	  });
   
   dials.click(function(){
     //audio_keyclick.play();

@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.webkit.ConsoleMessage;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -55,6 +56,7 @@ public class mainActivity extends Activity implements LoginListener,
 
     private String skinUrl = "file:///android_asset/skins/samsung/index.html";
     private String settingsUrl = "file:///android_asset/skins/samsung/settings.html";
+    private String walletUrl = "file:///android_asset/skins/samsung/wallet.html";
     private TextView statusBar;
     private TextView userBar;
 
@@ -67,6 +69,9 @@ public class mainActivity extends Activity implements LoginListener,
     }
     public void statusMessage(String message) {
         //Log.d(TAG,"statusbar " + message);
+
+        this.statusBar.setTextColor(Color.WHITE);
+
         if (message.equals("Ready")){
             if (phoneUser.capabilities.phoneInCapability.equals("yes")&& phoneUser.capabilities.phoneOutCapability.equals("yes")) {
                 message = "Ready to call/receive";
@@ -102,6 +107,12 @@ public class mainActivity extends Activity implements LoginListener,
         mWebView.loadUrl(skinUrl);
 
     }
+
+    public void showWallet() {
+        mWebView.loadUrl(walletUrl);
+    }
+
+
     private WebView mWebView;
 
     private class MyWebViewClient extends WebViewClient {
@@ -122,13 +133,22 @@ public class mainActivity extends Activity implements LoginListener,
             Log.d(TAG, "page finished loading: " + url);
 
             String javaScriptUrl;
-            javaScriptUrl = "javascript:";
-            javaScriptUrl += "list_contacts('" + phoneUser.contacts + "');";
-
+            javaScriptUrl ="javascript: ";
+            //javaScriptUrl += "list_contacts('" + phoneUser.contacts + "');";
+            //javaScriptUrl += " setWallet(" + phoneUser.capabilities.wallet + ");";
+            javaScriptUrl  +=" updateUI(" + phoneUser.capabilities.wallet + ",'" +phoneUser.contacts + "');";
+            Log.d(TAG,"javascript Url =" + javaScriptUrl);
 
             //phoneLine.phoneEvent("debug","got to onpagefinished event with list =" + javaScriptUrl);
             view.loadUrl(javaScriptUrl);
 
+        }
+
+        public boolean onConsoleMessage(ConsoleMessage cm) {
+            Log.d(TAG, cm.message() + " -- From line "
+                    + cm.lineNumber() + " of "
+                    + cm.sourceId() );
+            return true;
         }
     }
 
@@ -156,6 +176,7 @@ public class mainActivity extends Activity implements LoginListener,
             payload = new JSONObject(json);
             action = payload.getString("action");
             Log.d(TAG, "interpreting jsonobject.action: " + action);
+
             if (action.equals("key")) {
                 String key = payload.getString("arguments");
                 //Log.d(TAG, "key " +  key);
@@ -169,7 +190,8 @@ public class mainActivity extends Activity implements LoginListener,
                         Map<String, String> params = new HashMap<String, String>();
                         number = "client:" + number;
                         params.put("To", number);
-                        phone.connect(params);
+                        phoneUser.logCall(number);
+                        //phone.connect(params);
                     }
                     else {
                         statusAlert("not authorized to call");
@@ -179,7 +201,8 @@ public class mainActivity extends Activity implements LoginListener,
 
             } else if (action.equals("hangup")) {
                 Log.d(TAG, "hangup ");
-                phone.disconnect();
+                phoneUser.logHangup();
+                //phone.disconnect();
             } else if (action.equals("saveUser")) {
                 final JSONObject mUser;
                 mUser = payload.getJSONObject("arguments");
@@ -210,9 +233,25 @@ public class mainActivity extends Activity implements LoginListener,
                         phone.setSpeakerEnabled(true);
                         break;
                 }
+            } else if (action.equals("updateWallet")){
+                final JSONObject transaction;
+                transaction = payload.getJSONObject("arguments");
+                Double amount = transaction.getDouble("amount");
+                String ccNumber = transaction.getString("ccNumber");
+                String expirationMonth = transaction.getString("expirationMonth");
+                String expirationYear = transaction.getString("expirationYear");
+                String securityCode = transaction.getString ("securityCode");
+                String nameOnCard = transaction.getString("nameOnCard");
+
+
+                phoneUser.saveTransaction(amount, ccNumber,expirationMonth,expirationYear,securityCode,nameOnCard);
+
+                phoneUser.updateWallet();
+
             }
+
         } catch (JSONException e) {
-            Log.e(TAG, "json parsing error");
+            Log.e(TAG, " main Activity parseUrl: json parsing error");
         }
 
 
@@ -351,14 +390,17 @@ public class mainActivity extends Activity implements LoginListener,
                 if (phone.isConnected()) {
                     switch (phone.getConnectionState()) {
                         case DISCONNECTED:
+                            phoneUser.logDisconnected();
                             statusMessage("Disconnected");
                             uiShowState("disconnected");
                             break;
                         case CONNECTED:
+                            phoneUser.logConnected();
                             statusMessage("Connected");
                             uiShowState("Connected");
                             break;
                         default:
+                            phoneUser.logDialing();
                             statusMessage("Dialing");
                             uiShowState("dialing");
                             break;

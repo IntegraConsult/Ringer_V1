@@ -30,7 +30,18 @@ class userSettings implements Serializable {
 class userCapabilities {
     String phoneInCapability = "";
     String phoneOutCapability = "";
-
+    Double credit = 0.0;
+    Double wallet = 0.0;
+    Double used = 0.0;
+    String date ="";
+}
+class transaction {
+    double amount = 0.0;
+    String ccNumber = "";
+    String expirationMonth = "";
+    String expirationYear = "";
+    String securityCode = "";
+    String nameOnCard = "";
 }
 
 public class user {
@@ -39,6 +50,7 @@ public class user {
 
     public userSettings settings = new userSettings();
     public userCapabilities capabilities= new userCapabilities();
+    private transaction userTransaction = new transaction();
 
     //public String ringerLoginUrl ="http://twilio/unapps.net/login.php";
     //public String ringerRegisterUrl ="http://twilio/unapps.net/register.php";
@@ -57,6 +69,9 @@ public class user {
     final static int ACTION_REGISTER = 2;
     final static int ACTION_SET_CAPABILITIES = 3;
     final static int ACTION_REGISTRATION_OK = 4 ;
+    final static int ACTION_UPDATE_WALLET = 5 ;
+    final static int ACTION_UPDATE_WALLET_OK = 6 ;
+    final static int ACTION_UPDATE_WALLET_ERROR = 7 ;
 
 
 
@@ -86,6 +101,16 @@ public class user {
                 case ACTION_SET_CAPABILITIES:
                     Log.d(TAG,"login status OK");
                     JSONObject parameters = response.getJSONObject("parameters");
+                    this.capabilities.wallet= parameters.getDouble("wallet");
+                    this.capabilities.credit= parameters.getDouble("credit");
+                    this.capabilities.date = parameters.getString("date");
+
+
+                    Log.d(TAG,"credit =" + this.capabilities.credit);
+                    Log.d(TAG,"wallet =" + this.capabilities.wallet);
+                    Log.d(TAG,"date =" + this.capabilities.date);
+
+
                     phoneOutCapability = parameters.getString("phoneOutCapability");
                     phoneInCapability = parameters.getString("phoneInCapability");
                     if ( !( phoneInCapability.equals(this.capabilities.phoneOutCapability) &&
@@ -102,12 +127,21 @@ public class user {
 
                     this.capabilities.phoneOutCapability = phoneOutCapability;
                     this.capabilities.phoneInCapability = phoneInCapability;
-                    Log.d(TAG,"capabilities set to phonein:" +this.capabilities.phoneInCapability + " phoneout:" + this.capabilities.phoneOutCapability);
+                    Log.d(TAG, "capabilities set to phonein:" + this.capabilities.phoneInCapability + " phoneout:" + this.capabilities.phoneOutCapability);
 
-                    // continue with phone processing
-                    mainAct.showUI();
-                    mainAct.userMessage(settings.name);
-                    mainAct.providerLogin();
+                    if (this.capabilities.wallet > this.capabilities.credit) {
+                        // continue with phone processing
+                        mainAct.showUI();
+                        mainAct.userMessage(settings.name);
+                        mainAct.providerLogin();
+
+                    }
+                    else {
+                        this.capabilities.phoneOutCapability= "no" ;
+                        this.capabilities.phoneInCapability= "no";
+                        mainAct.showWallet();
+
+                    }
                     break;
                 case ACTION_ERROR :
                     String message = response.getString("parameters");
@@ -118,10 +152,32 @@ public class user {
                     //registerAtRinger();
                     break;
                 case ACTION_REGISTRATION_OK :
-                    Log.d(TAG,"regsitered successfully");
+                    Log.d(TAG,"registered successfully");
                     mainAct.showUI();
                     loginAtRinger();
                     break;
+                case ACTION_UPDATE_WALLET_OK :
+                    Log.d(TAG, "wallet update success");
+                    try {
+                        JSONObject params = response.getJSONObject("parameters");
+                        this.capabilities.wallet = params.getDouble("content");
+                        mainAct.statusMessage("phone credits updated");
+                        mainAct.showUI();
+
+                    }
+                    catch(JSONException e){
+                        Log.e(TAG,"ACTION_UPDATE_WALLET_OK Error: json error");
+                    }
+
+
+                    break;
+
+                case ACTION_UPDATE_WALLET_ERROR :
+                    Log.d(TAG, "wallet update error");
+                    mainAct.statusAlert("phone credits have not bee updated");
+
+                    break;
+
                 default:
                     Log.e(TAG,"web response error : unkonwn action " + action);
                     break;
@@ -129,7 +185,7 @@ public class user {
 
         }
         catch (JSONException e){
-            Log.e(TAG,"handle web response JSON error");
+            Log.e(TAG,"handle web response: JSON error");
 
         }
 
@@ -153,10 +209,12 @@ public class user {
             //Log.d(TAG,"login at Ringer code passed first inspection");
             // encrypt settings
             JSONObject payload = new JSONObject();
+            this.capabilities.used = getUsed();
             try {
                 payload.put("action",ACTION_LOGIN);
                 payload.put("code",this.settings.code);
                 payload.put("phone",this.settings.phone);
+                payload.put("used",this.capabilities.used);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -208,12 +266,12 @@ public class user {
             //i.printStackTrace();
 
         }
-/**/
+/*
         Log.d(TAG, "Deserialized usersettings...");
         Log.d(TAG, "name: " + this.settings.name);
         Log.d(TAG, "code: " + this.settings.code);
         Log.d(TAG, "phone: " + this.settings.phone);
-/**/
+*/
     }
 
     public void saveSettings(String name, String code, String phone) {
@@ -243,7 +301,71 @@ public class user {
 
     }
 
+    ///////////////////  accounting /////////////////////
+    private Double getUsed() {
+        // get usage sinca last login
+        return 0.1;
+    }
 
+    public void saveTransaction(double amount, String ccNumber,String expirationMonth,
+                                String expirationYear,String securityCode,String nameOnCard){
+        userTransaction.amount = amount;
+        userTransaction.ccNumber=ccNumber;
+        userTransaction.expirationMonth=expirationMonth;
+        userTransaction.expirationYear=expirationYear;
+        userTransaction.securityCode=securityCode;
+        userTransaction.nameOnCard=nameOnCard;
+    }
+
+    public void updateWallet(){
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("action",ACTION_UPDATE_WALLET);
+            payload.put("code",this.settings.code);
+            payload.put("phone",this.settings.phone);
+            payload.put("amount",this.userTransaction.amount);
+            payload.put("ccNumber",this.userTransaction.ccNumber);
+            payload.put("expirationMonth",this.userTransaction.expirationMonth);
+            payload.put("expirationYear",this.userTransaction.expirationYear);
+            payload.put("securityCode",this.userTransaction.securityCode);
+            payload.put("nameOnCard",this.userTransaction.nameOnCard);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        String encryptedPayload = encrypt(payload.toString());
+        //doo http request call Ringerregistration?q=encryptedjson
+        //3.on response loginAtRinger
+        web.get(ringerServiceUrl, encryptedPayload);
+
+    }
+
+    public void logCall(String number){
+        Log.d(TAG, "Logging call to " + number);
+
+    }
+    public void logConnect(String number){
+        Log.d(TAG,"Logging attempto connect to " +  number );
+
+    }
+    public void logDialing() {
+        Log.d(TAG,"Logging dialinf state ");
+
+    }
+    public void logConnected(){
+        Log.d(TAG,"Logging connected state ");
+
+    }
+    public void logHangup(){
+        Log.d(TAG,"Logging hang up");
+    }
+    public void logDisconnect(){
+       Log.d(TAG,"Logging disconnect attempt");
+    }
+    public void logDisconnected(){
+        Log.d(TAG,"Logging disconnected state");
+    }
+
+    //////////////////// contacts /////////////////////////
     public String updateContacts() {
         Cursor mCursor;
         Uri CONTENT_URI = ContactsContract.Contacts.CONTENT_URI;
